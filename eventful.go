@@ -68,5 +68,3 @@ func Run() {
 func main() {
 	Run()
 }
-
-// Remove the unused main function
