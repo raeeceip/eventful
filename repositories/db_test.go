@@ -1,6 +1,6 @@
 // FILEPATH: /Users/chisom.chibogu/dev/eventful/db/db_test.go
 
-package db
+package repositories
 
 import (
 	"database/sql"
