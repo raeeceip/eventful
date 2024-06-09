@@ -1,0 +1,27 @@
+version: '3'
+secrets:
+  token:
+    environment: "OAUTH_TOKEN"
+    file: "./token.txt"
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: mydatabase
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+
+  server:
+    build: .
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  proxy:
+    image: nginx:latest
+    ports:
+      - 80:80
+    depends_on:
+      - server
