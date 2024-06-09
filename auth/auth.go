@@ -1,45 +1,72 @@
 package auth
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/okta/okta-jwt-verifier-golang"
-	"github.com/okta/okta-sdk-golang/okta"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func GetVerifier() *okta.JwtVerifier {
-	toValidate := map[string]string{"aud": "api://default", "cid": os.Getenv("OKTA_CLIENT_ID")}
+var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
-	jwtVerifierSetup := okta.JwtVerifier{
-		Issuer:           os.Getenv("OKTA_ISSUER"),
-		ClaimsToValidate: toValidate,
-	}
+// GenerateToken generates a JWT token
+func GenerateToken(username string) (string, error) {
+	claims := jwt.MapClaims{}
+	claims["authorized"] = true
+	claims["username"] = username
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expires after 24 hours
 
-	return jwtVerifierSetup.New()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtSecret)
 }
 
+// AuthMiddleware is a middleware for JWT authentication
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token := c.Request.Header.Get("Authorization")
-		if token == "" {
+		tokenString := c.Request.Header.Get("Authorization")
+		if tokenString == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		}
 
-		token = strings.TrimPrefix(token, "Bearer ")
-		verifier := GetVerifier()
-		_, err := verifier.VerifyAccessToken(context.TODO(), token)
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return jwtSecret, nil
+		})
+
 		if err != nil {
+			if err == jwt.ErrSignatureInvalid {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+				c.Abort()
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request"})
+			c.Abort()
+			return
+		}
+
+		if !token.Valid {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
 		}
 
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !claims["authorized"].(bool) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", claims["username"])
 		c.Next()
 	}
 }
