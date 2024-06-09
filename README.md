@@ -43,7 +43,7 @@ Before running the server, make sure you have the following installed:
 
 The project directory is organized as follows:
 
-``shell 
+``` shell 
 eventful-backend/
 ├── auth/
 │   └── auth.go                # Contains the authentication middleware using Okta
