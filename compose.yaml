@@ -1,27 +1,39 @@
-version: '3'
-secrets:
-  token:
-    environment: "OAUTH_TOKEN"
-    file: "./token.txt"
+version: '3.8'
+
 services:
   db:
-    image: mysql:latest
+    image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: mydatabase
-      MYSQL_USER: myuser
-      MYSQL_PASSWORD: mypassword
-
-  server:
-    build: .
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: eventful
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
     ports:
-      - 8080:8080
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  app:
+    build: .
     depends_on:
       - db
+    environment:
+      DB_HOST: db
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: eventful
+      JWT_SECRET: your_secret_key
+    env_file:
+      - .env
 
-  proxy:
+  nginx:
     image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - 80:80
+      - "80:80"
     depends_on:
-      - server
+      - app
+
+volumes:
+  db_data:
