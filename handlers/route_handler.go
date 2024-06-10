@@ -12,8 +12,10 @@ import (
 func NewRouter() *gin.Engine {
 	r := gin.Default()
 
-	r.POST("/login", LoginHandler)
+	// Public route
+	r.POST("/login", auth.LoginHandler)
 
+	// Protected routes
 	r.Use(auth.AuthMiddleware())
 
 	eventRepo := repositories.NewEventRepository(config.DB)
