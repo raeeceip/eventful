@@ -134,7 +134,7 @@ eventful-backend/
 
 ## API Documentation
 
-For detailed information on the available API endpoints, please refer to the [API documentation](api.md).
+For detailed information on the available API endpoints, please refer to the [API documentation](API.md).
 
 ## Contributing
 
