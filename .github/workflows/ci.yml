@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: Cache Go modules
+        id: cache-go-mod
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Go mod tidy
+        run: go mod tidy
+
+      - name: Go mod vendor
+        run: go mod vendor
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Cache Go mod vendor
+        uses: actions/cache@v2
+        with:
+          path: |
+            ./vendor
+          key: ${{ runner.os }}-vendor-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-vendor-
+
+      - name: Run linters
+        run: |
+          go install golang.org/x/lint/golint@latest
+          golint ./...
