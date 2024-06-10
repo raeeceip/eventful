@@ -4,8 +4,11 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/joho/godotenv"
 )
 
 // jwt generates a JWT secret key and writes it to the .env file.
@@ -36,4 +39,18 @@ func jwt() {
 	}
 
 	fmt.Println("JWT_SECRET written to .env file")
+}
+
+func ensureJWTSecret() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwt()
+	} else {
+		fmt.Println("JWT_SECRET already exists in .env file")
+	}
 }

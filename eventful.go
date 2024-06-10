@@ -14,7 +14,7 @@ import (
 
 func main() {
 
-	jwt()
+	ensureJWTSecret()
 	config.InitDB()
 	defer config.CloseDB()
 
