@@ -12,8 +12,13 @@ import (
 func NewRouter() *gin.Engine {
 	r := gin.Default()
 
+	// Route for generating tokens
+	r.POST("/generate-token", auth.TokenGenerationHandler)
+
+	// Route for login
 	r.POST("/login", LoginHandler)
 
+	// Protected routes
 	r.Use(auth.AuthMiddleware())
 
 	eventRepo := repositories.NewEventRepository(config.DB)
