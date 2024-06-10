@@ -13,6 +13,8 @@ import (
 )
 
 func main() {
+
+	jwt()
 	config.InitDB()
 	defer config.CloseDB()
 
