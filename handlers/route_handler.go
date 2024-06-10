@@ -12,8 +12,11 @@ import (
 func NewRouter() *gin.Engine {
 	r := gin.Default()
 
-	// Public route
-	r.POST("/login", auth.LoginHandler)
+	// Route for generating tokens
+	r.POST("/generate-token", auth.TokenGenerationHandler)
+
+	// Route for login
+	r.POST("/login", LoginHandler)
 
 	// Protected routes
 	r.Use(auth.AuthMiddleware())

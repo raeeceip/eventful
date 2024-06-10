@@ -10,10 +10,10 @@ import (
 )
 
 type UserHandler struct {
-	Repo *repositories.UserRepo
+	Repo *repositories.UserRepository
 }
 
-func NewUserHandler(repo *repositories.UserRepo) *UserHandler {
+func NewUserHandler(repo *repositories.UserRepository) *UserHandler {
 	return &UserHandler{Repo: repo}
 }
 
@@ -31,26 +31,17 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUserByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 		return
 	}
-	user, err := h.Repo.GetUserByID(id)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-	c.JSON(http.StatusOK, user)
-}
-
-func (h *UserHandler) GetUsers(c *gin.Context) {
-	users, err := h.Repo.GetUsers()
+	user, err := h.Repo.GetUserByID(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, users)
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) UpdateUser(c *gin.Context) {
@@ -67,12 +58,12 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) DeleteUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 		return
 	}
-	if err := h.Repo.DeleteUser(id); err != nil {
+	if err := h.Repo.DeleteUser(uint(id)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -14,10 +14,11 @@ var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
 // GenerateToken generates a JWT token
 func GenerateToken(username string) (string, error) {
-	claims := jwt.MapClaims{}
-	claims["authorized"] = true
-	claims["username"] = username
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expires after 24 hours
+	claims := jwt.MapClaims{
+		"authorized": true,
+		"username":   username,
+		"exp":        time.Now().Add(time.Hour * 24).Unix(), // Token expires after 24 hours
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecret)
@@ -71,29 +72,40 @@ func AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// LoginHandler handles user login and token generation
-func LoginHandler(c *gin.Context) {
-	var login struct {
+// TokenGenerationHandler handles token generation and writing to .env file
+func TokenGenerationHandler(c *gin.Context) {
+	var request struct {
 		Username string `json:"username" binding:"required"`
-		Password string `json:"password" binding:"required"`
 	}
 
-	if err := c.ShouldBindJSON(&login); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Validate user credentials (this is just a placeholder, implement your own validation)
-	if login.Username != "admin" || login.Password != "password" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid username or password"})
-		return
-	}
-
-	token, err := GenerateToken(login.Username)
+	token, err := GenerateToken(request.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
+	// Write token to .env file
+	err = writeTokenToEnv(token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to write token to .env file"})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func writeTokenToEnv(token string) error {
+	file, err := os.OpenFile(".env", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString("USER_AUTH_TOKEN=" + token + "\n")
+	return err
 }
