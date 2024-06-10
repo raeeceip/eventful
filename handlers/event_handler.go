@@ -27,7 +27,7 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, event)
+	c.JSON(https: ???? , event) // What should be the status code here?
 }
 
 func (h *EventHandler) GetEventByID(c *gin.Context) {
