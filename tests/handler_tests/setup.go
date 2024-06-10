@@ -2,15 +2,37 @@ package handler_tests
 
 import (
 	"eventful/auth"
-	"eventful/config"
 	"eventful/handlers"
+	"eventful/models"
 	"eventful/repositories"
+	"os"
+	"testing"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
+func SetupTestDB() *gorm.DB {
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect to test database: " + err.Error())
+	}
+
+	err = db.AutoMigrate(&models.Event{}, &models.User{}, &models.Team{}, &models.Role{})
+	if err != nil {
+		panic("failed to migrate test database: " + err.Error())
+	}
+
+	return db
+}
+
 func SetupRouter() *gin.Engine {
-	r := gin.Default()
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+
+	// Use custom recovery middleware to handle panics
+	r.Use(gin.Recovery())
 
 	// Add routes for generating tokens and login
 	r.POST("/generate-token", auth.TokenGenerationHandler)
@@ -19,14 +41,20 @@ func SetupRouter() *gin.Engine {
 	// Protected routes
 	r.Use(auth.AuthMiddleware())
 
-	eventRepo := repositories.NewEventRepository(config.DB)
+	// Setup database
+	db := SetupTestDB()
+
+	// Initialize repositories
+	eventRepo := repositories.NewEventRepository(db)
+	teamRepo := repositories.NewTeamRepository(db)
+	userRepo := repositories.NewUserRepository(db)
+	roleRepo := repositories.NewRoleRepository(db)
+
+	// Initialize handlers
 	eventHandler := handlers.NewEventHandler(eventRepo)
-
-	teamRepo := repositories.NewTeamRepository(config.DB)
 	teamHandler := handlers.NewTeamHandler(teamRepo)
-
-	userRepo := repositories.NewUserRepository(config.DB)
 	userHandler := handlers.NewUserHandler(userRepo)
+	roleHandler := handlers.NewRoleHandler(roleRepo)
 
 	// Event routes
 	r.POST("/events", eventHandler.CreateEvent)
@@ -46,5 +74,23 @@ func SetupRouter() *gin.Engine {
 	r.PUT("/users/:id", userHandler.UpdateUser)
 	r.DELETE("/users/:id", userHandler.DeleteUser)
 
+	// Role routes
+	r.POST("/roles", roleHandler.CreateRole)
+	r.GET("/roles/:id", roleHandler.GetRoleByID)
+	r.GET("/roles", roleHandler.GetRoles)
+	r.PUT("/roles/:id", roleHandler.UpdateRole)
+	r.DELETE("/roles/:id", roleHandler.DeleteRole)
+
 	return r
+}
+
+func TestMain(m *testing.M) {
+	// Set the JWT secret for testing
+	os.Setenv("JWT_SECRET", "testsecret")
+
+	// Run the tests
+	code := m.Run()
+
+	// Exit with the test result code
+	os.Exit(code)
 }
