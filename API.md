@@ -1,8 +1,7 @@
-Absolutely, here is the complete `api.md` file that includes all the API documentation for your Eventful Backend Server:
 
 ### api.md
 
-```markdown
+
 # API Documentation
 
 This document provides information about the API endpoints available in the Eventful Backend Server.
@@ -542,6 +541,6 @@ This document provides information about the API endpoints available in the Even
     "error": "User not found"
   }
   ```
-```
+
 
 This `api.md` file provides a comprehensive overview of the available API endpoints, their request bodies, and possible responses for the Eventful Backend Server. It covers authentication, events, roles, teams, and users.
