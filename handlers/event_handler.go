@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"eventful/models"
-	"eventful/repositories"
 	"net/http"
 	"strconv"
+
+	"eventful/models"
+	"eventful/repositories"
 
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +28,7 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(https: ???? , event) // What should be the status code here?
+	c.JSON(http.StatusOK, event)
 }
 
 func (h *EventHandler) GetEventByID(c *gin.Context) {
@@ -42,15 +43,6 @@ func (h *EventHandler) GetEventByID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, event)
-}
-
-func (h *EventHandler) GetEvents(c *gin.Context) {
-	events, err := h.Repo.GetEvents()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, events)
 }
 
 func (h *EventHandler) UpdateEvent(c *gin.Context) {
@@ -78,5 +70,3 @@ func (h *EventHandler) DeleteEvent(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Event deleted"})
 }
-
-// Add other handlers for update, delete, etc.

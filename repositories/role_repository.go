@@ -14,26 +14,20 @@ func NewRoleRepository(db *gorm.DB) *RoleRepository {
 	return &RoleRepository{DB: db}
 }
 
+func (repo *RoleRepository) CreateRole(role *models.Role) error {
+	return repo.DB.Create(role).Error
+}
+
 func (repo *RoleRepository) GetRoleByID(id uint) (*models.Role, error) {
 	var role models.Role
 	err := repo.DB.First(&role, id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &role, nil
+	return &role, err
 }
 
 func (repo *RoleRepository) GetRoles() ([]models.Role, error) {
 	var roles []models.Role
 	err := repo.DB.Find(&roles).Error
-	if err != nil {
-		return nil, err
-	}
-	return roles, nil
-}
-
-func (repo *RoleRepository) CreateRole(role *models.Role) error {
-	return repo.DB.Create(role).Error
+	return roles, err
 }
 
 func (repo *RoleRepository) UpdateRole(role *models.Role) error {
