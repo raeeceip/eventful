@@ -14,6 +14,7 @@ import (
 
 func init() {
 	os.Setenv("JWT_SECRET", "testsecret")
+	jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 }
 
 func TestGenerateToken(t *testing.T) {
@@ -26,7 +27,7 @@ func TestGenerateToken(t *testing.T) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return []byte(os.Getenv("JWT_SECRET")), nil
+		return jwtSecret, nil
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, parsedToken)
@@ -93,7 +94,7 @@ func TestAuthMiddleware_InvalidSigningMethod(t *testing.T) {
 		"username":   "testuser",
 		"exp":        time.Now().Add(24 * time.Hour).Unix(),
 	})
-	tokenString, _ := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	tokenString, _ := token.SignedString(jwtSecret)
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

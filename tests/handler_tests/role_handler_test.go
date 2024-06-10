@@ -8,16 +8,21 @@ import (
 	"strconv"
 	"testing"
 
+	"eventful/auth"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateRole(t *testing.T) {
 	router := SetupRouter()
 
+	token, _ := auth.GenerateToken("testuser")
+
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"name":"Admin","leader":true}`)
 	req, _ := http.NewRequest("POST", "/roles", body)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -27,11 +32,14 @@ func TestCreateRole(t *testing.T) {
 func TestGetRoleByID(t *testing.T) {
 	router := SetupRouter()
 
+	token, _ := auth.GenerateToken("testuser")
+
 	// Create a role first
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"name":"Admin","leader":true}`)
 	req, _ := http.NewRequest("POST", "/roles", body)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -43,6 +51,7 @@ func TestGetRoleByID(t *testing.T) {
 	// Get the role by ID
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "/roles/"+strconv.Itoa(roleID), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)

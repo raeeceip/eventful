@@ -8,16 +8,21 @@ import (
 	"strconv"
 	"testing"
 
+	"eventful/auth"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateEvent(t *testing.T) {
 	router := SetupRouter()
 
+	token, _ := auth.GenerateToken("testuser")
+
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"name":"Test Event","description":"This is a test event","start_date":"2023-01-01T00:00:00Z","end_date":"2023-01-02T00:00:00Z"}`)
 	req, _ := http.NewRequest("POST", "/events", body)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -27,11 +32,14 @@ func TestCreateEvent(t *testing.T) {
 func TestGetEventByID(t *testing.T) {
 	router := SetupRouter()
 
+	token, _ := auth.GenerateToken("testuser")
+
 	// Create an event first
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"name":"Test Event","description":"This is a test event","start_date":"2023-01-01T00:00:00Z","end_date":"2023-01-02T00:00:00Z"}`)
 	req, _ := http.NewRequest("POST", "/events", body)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -43,6 +51,7 @@ func TestGetEventByID(t *testing.T) {
 	// Get the event by ID
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "/events/"+strconv.Itoa(eventID), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)

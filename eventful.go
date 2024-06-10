@@ -13,6 +13,8 @@ import (
 )
 
 func main() {
+
+	ensureJWTSecret()
 	config.InitDB()
 	defer config.CloseDB()
 

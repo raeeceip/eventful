@@ -8,16 +8,21 @@ import (
 	"strconv"
 	"testing"
 
+	"eventful/auth"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateTeam(t *testing.T) {
 	router := SetupRouter()
 
+	token, _ := auth.GenerateToken("testuser")
+
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"name":"Dev Team","description":"Development Team"}`)
 	req, _ := http.NewRequest("POST", "/teams", body)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -27,11 +32,14 @@ func TestCreateTeam(t *testing.T) {
 func TestGetTeamByID(t *testing.T) {
 	router := SetupRouter()
 
+	token, _ := auth.GenerateToken("testuser")
+
 	// Create a team first
 	w := httptest.NewRecorder()
 	body := bytes.NewBufferString(`{"name":"Dev Team","description":"Development Team"}`)
 	req, _ := http.NewRequest("POST", "/teams", body)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -43,6 +51,7 @@ func TestGetTeamByID(t *testing.T) {
 	// Get the team by ID
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("GET", "/teams/"+strconv.Itoa(teamID), nil)
+	req.Header.Set("Authorization", "Bearer "+token)
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
