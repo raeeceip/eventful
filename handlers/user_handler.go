@@ -44,6 +44,17 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+func (h *UserHandler) GetUsers(c *gin.Context) {
+	users, err := h.Repo.GetUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+
+}
+
 func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {

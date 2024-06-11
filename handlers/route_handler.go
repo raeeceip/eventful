@@ -27,6 +27,12 @@ func NewRouter() *gin.Engine {
 	roleRepo := repositories.NewRoleRepository(config.DB)
 	roleHandler := NewRoleHandler(roleRepo)
 
+	userRepo := repositories.NewUserRepository(config.DB)
+	userHandler := NewUserHandler(userRepo)
+
+	teamRepo := repositories.NewTeamRepository(config.DB)
+	teamHandler := NewTeamHandler(teamRepo)
+
 	// Event routes
 	r.POST("/events", eventHandler.CreateEvent)
 	r.GET("/events/:id", eventHandler.GetEventByID)
@@ -40,7 +46,20 @@ func NewRouter() *gin.Engine {
 	r.PUT("/roles/:id", roleHandler.UpdateRole)
 	r.DELETE("/roles/:id", roleHandler.DeleteRole)
 
-	// Add more routes for users, teams, etc.
+	// user routes
+	r.POST("/users", userHandler.CreateUser)
+	r.GET("/users/:id", userHandler.GetUserByID)
+	r.GET("/users", userHandler.GetUsers)
+	r.PUT("/users/:id", userHandler.UpdateUser)
+	r.DELETE("/users/:id", userHandler.DeleteUser)
+
+	// team routes
+	r.POST("/teams", teamHandler.CreateTeam)
+	r.GET("/teams/:id", teamHandler.GetTeamByID)
+	r.GET("/teams", teamHandler.GetTeams)
+	r.PUT("/teams/:id", teamHandler.UpdateTeam)
+	r.DELETE("/teams/:id", teamHandler.DeleteTeam)
 
 	return r
+
 }
