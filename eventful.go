@@ -2,49 +2,69 @@ package main
 
 import (
 	"context"
-	"eventful/config"
-	"eventful/handlers"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 )
 
 func main() {
+	// Connect to Redis
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
 
-	ensureJWTSecret()
-	config.InitDB()
-	defer config.CloseDB()
+	ctx := context.Background()
 
-	r := handlers.NewRouter()
-
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
+	// Ping Redis to check connection
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Fatal("Failed to connect to Redis: ", err)
 	}
 
-	go func() {
-		log.Println("Starting server on port 8080")
+	repo := NewRepository(rdb)
+	handler := NewHandler(repo)
 
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server failed to start: %v", err)
+	r := gin.Default()
+
+	// Load HTML templates
+	r.LoadHTMLGlob("templates/*")
+
+	// Serve static files
+	r.Static("/static", "./static")
+
+	// Home page
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"title": "Eventful",
+		})
+	})
+
+	// API routes
+	api := r.Group("/api")
+	{
+		// Event routes
+		api.POST("/events", handler.CreateEvent)
+		api.GET("/events/:id", handler.GetEvent)
+		api.PUT("/events/:id", handler.UpdateEvent)
+		api.DELETE("/events/:id", handler.DeleteEvent)
+		api.GET("/events", handler.GetAllEvents)
+
+		// User routes
+		api.POST("/users", handler.CreateUser)
+		api.GET("/users/:id", handler.GetUser)
+		api.PUT("/users/:id", handler.UpdateUser)
+		api.DELETE("/users/:id", handler.DeleteUser)
+		api.GET("/users", handler.GetAllUsers)
+
+		// Admin routes
+		admin := api.Group("/admin")
+		{
+			admin.POST("/roles", handler.CreateRole)
+			admin.PUT("/users/role", handler.AssignUserRole)
 		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("Shutting down server...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	log.Println("Server exiting")
+	r.Run(":8080")
 }
