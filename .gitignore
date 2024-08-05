@@ -16,8 +16,10 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
-
+vendor
+# Node.js dependencies
+node_modules/
+dist
 # Go workspace file
 go.work
 go.work.sum
