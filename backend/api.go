@@ -95,11 +95,12 @@ func GetEvents() []Event {
 
 	return events
 }
-
-func getEvents(c echo.Context) error {
-	events := GetEvents()
-	return c.JSON(http.StatusOK, events)
+func CreateEvent(event Event) error {
+	_, err := db.Exec("INSERT INTO events (title, description, date) VALUES (?, ?, ?)",
+		event.Title, event.Description, event.Date)
+	return err
 }
+
 func createUser(c echo.Context) error {
 	u := new(User)
 	if err := c.Bind(u); err != nil {
